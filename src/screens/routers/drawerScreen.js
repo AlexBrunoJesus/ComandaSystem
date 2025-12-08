@@ -17,7 +17,7 @@ export default function DrawerRouter() {
         screenOptions={{
           headerShown: false,
           drawerActiveTintColor: '#fff',
-          drawerActiveBackgroundColor: '#4169e1',
+          drawerActiveBackgroundColor: '#11c211ff',
           drawerStyle: { backgroundColor: '#f8f8f8' },
         }}
       >

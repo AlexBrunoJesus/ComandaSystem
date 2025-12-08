@@ -13,7 +13,7 @@ export default function StackRouter({ navigation }) {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#4169e1' },
+        headerStyle: { backgroundColor: '#11c211ff' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
       }}
@@ -27,7 +27,7 @@ export default function StackRouter({ navigation }) {
             <Feather.Button
               name="menu"
               size={25}
-              backgroundColor="#4169e1"
+              backgroundColor="#11c211ff"
               onPress={() => navigation.openDrawer()}
             />
           ),
@@ -35,7 +35,7 @@ export default function StackRouter({ navigation }) {
             <Feather.Button
               name="search"
               size={25}
-              backgroundColor="#4169e1"
+              backgroundColor="#11c211ff"
               onPress={() => alert('Buscar...')}
             />
           ),

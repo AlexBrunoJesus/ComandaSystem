@@ -2,8 +2,9 @@ import axios from 'axios';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-    baseURL: 'http://192.168.1.13:3000'
+  baseURL: "https://comandasystem-backend.onrender.com",  // ✔ CORRETO
 });
+
 
 
 api.interceptors.request.use(async (config) => {
