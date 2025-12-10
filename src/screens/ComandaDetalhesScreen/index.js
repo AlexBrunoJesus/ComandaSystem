@@ -38,6 +38,36 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
     }
   };
 
+  const fecharConta = async () => {
+  try {
+    Alert.alert(
+      "Fechar Comanda",
+      "Tem certeza que deseja fechar esta comanda?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Fechar",
+          onPress: async () => {
+            const response = await api.put(`/comandas/${comandaId}/fechar`);
+
+            const novaId = response.data.novaComanda._id;
+
+            Alert.alert("Sucesso", "A comanda foi fechada e outra foi aberta!");
+
+            // navega automaticamente para a nova comanda vazia
+            navigation.replace("ComandaDetalhes", { comandaId: novaId });
+          }
+        }
+      ]
+    );
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Erro", "Não foi possível fechar a comanda.");
+  }
+};
+
+
+
   const adicionarProduto = async (produtoId) => {
   try {
     await api.post(`/comandas/${comandaId}/produtos`, {  // ⚠️ a rota é /produtos
@@ -98,6 +128,10 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
         <Text style={styles.btnAddText}>+ Adicionar Produto</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.btnFechar} onPress={fecharConta}>
+            <Text style={styles.btnFecharText}>Fechar Conta</Text>
+        </TouchableOpacity>
+
       {/* Modal para escolher produto */}
       <Modal visible={showModal} animationType="slide">
         <View style={styles.modalContainer}>
@@ -143,6 +177,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
+  btnFechar: {
+    backgroundColor: "red",
+    padding: 15,
+    marginTop: 20,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+btnFecharText: {
+  color: "#fff",
+  fontSize: 18,
+  fontWeight: "bold",
+},
   btnAddText: { color: "#fff", fontWeight: "bold" },
   modalContainer: { flex: 1, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
