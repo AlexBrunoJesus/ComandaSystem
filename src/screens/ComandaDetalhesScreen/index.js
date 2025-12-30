@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,24 +7,63 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
-  Button,
+  Animated,
   Alert,
+  Button,
 } from "react-native";
 import api from "../../services/api";
 
 export default function ComandaDetalhesScreen({ route, navigation }) {
   const { comandaId } = route.params;
+
   const [comanda, setComanda] = useState(null);
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
+  // Menu lateral
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(-250)).current;
+
+  const abrirMenu = () => {
+    setIsMenuVisible(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const fecharMenu = () => {
+    Animated.timing(slideAnim, {
+      toValue: -250,
+      duration: 200,
+      useNativeDriver: false,
+    }).start(() => setIsMenuVisible(false));
+  };
 
   const fetchComanda = async () => {
     try {
       const res = await api.get(`/comandas/${comandaId}`);
       setComanda(res.data);
-      navigation.setOptions({ title: res.data.name });
+
+      navigation.setOptions({
+        title: res.data.name,
+        headerRight: () => (
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#11c211ff",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 8,
+              marginRight: 10,
+            }}
+            onPress={abrirMenu}
+          >
+            <Text style={{ color: "#fff", fontSize: 22 }}>☰</Text>
+          </TouchableOpacity>
+        ),
+      });
     } catch (err) {
-      console.error(err);
       Alert.alert("Erro", "Não foi possível carregar a comanda.");
     }
   };
@@ -39,7 +78,8 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
   };
 
   const fecharConta = async () => {
-  try {
+    fecharMenu();
+
     Alert.alert(
       "Fechar Comanda",
       "Tem certeza que deseja fechar esta comanda?",
@@ -48,40 +88,26 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
         {
           text: "Fechar",
           onPress: async () => {
-            const response = await api.put(`/comandas/${comandaId}/fechar`);
-
-            const novaId = response.data.novaComanda._id;
-
-            Alert.alert("Sucesso", "A comanda foi fechada e outra foi aberta!");
-
-            // navega automaticamente para a nova comanda vazia
-            navigation.replace("ComandaDetalhes", { comandaId: novaId });
-          }
-        }
+            await api.put(`/comandas/${comandaId}/fechar`);
+            navigation.goBack();
+          },
+        },
       ]
     );
-  } catch (error) {
-    console.error(error);
-    Alert.alert("Erro", "Não foi possível fechar a comanda.");
-  }
-};
-
-
+  };
 
   const adicionarProduto = async (produtoId) => {
-  try {
-    await api.post(`/comandas/${comandaId}/produtos`, {  // ⚠️ a rota é /produtos
-      produtoId,  // agora bate com o backend
-      quantidade: 1,
-    });
-    setShowModal(false);
-    fetchComanda();
-  } catch (err) {
-    console.error(err);  // 🔹 opcional para ver o erro real no console
-    Alert.alert("Erro", "Não foi possível adicionar produto.");
-  }
-};
-
+    try {
+      await api.post(`/comandas/${comandaId}/produtos`, {
+        produtoId,
+        quantidade: 1,
+      });
+      setShowModal(false);
+      fetchComanda();
+    } catch (err) {
+      Alert.alert("Erro", "Não foi possível adicionar produto.");
+    }
+  };
 
   useEffect(() => {
     fetchComanda();
@@ -98,12 +124,12 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{comanda.name}</Text>
       <Text style={styles.subtitle}>
         Criada em: {new Date(comanda.createdAt).toLocaleString()}
       </Text>
 
       <Text style={styles.sectionTitle}>Produtos:</Text>
+
       <FlatList
         data={comanda.produtos}
         keyExtractor={(item, index) => index.toString()}
@@ -128,14 +154,29 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
         <Text style={styles.btnAddText}>+ Adicionar Produto</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.btnFechar} onPress={fecharConta}>
-            <Text style={styles.btnFecharText}>Fechar Conta</Text>
+      {/* OVERLAY */}
+      {isMenuVisible && (
+        <TouchableOpacity style={styles.overlay} onPress={fecharMenu} />
+      )}
+
+      {/* MENU LATERAL */}
+      <Animated.View style={[styles.sideMenu, { left: slideAnim }]}>
+        <Text style={styles.menuTitle}>Ações</Text>
+
+        <TouchableOpacity style={styles.menuItem} onPress={fecharConta}>
+          <Text style={styles.menuItemText}>Fechar Conta</Text>
         </TouchableOpacity>
 
-      {/* Modal para escolher produto */}
+        <TouchableOpacity style={styles.menuItem} onPress={fecharMenu}>
+          <Text style={[styles.menuItemText, { color: "#555" }]}>Cancelar</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* MODAL PRODUTOS */}
       <Modal visible={showModal} animationType="slide">
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Escolha um produto</Text>
+
           <FlatList
             data={produtos}
             keyExtractor={(item) => item._id}
@@ -149,6 +190,7 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
               </TouchableOpacity>
             )}
           />
+
           <Button title="Fechar" onPress={() => setShowModal(false)} />
         </View>
       </Modal>
@@ -159,9 +201,49 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "bold" },
+
+  sideMenu: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 250,
+    backgroundColor: "#fff",
+    padding: 20,
+    elevation: 10,
+    zIndex: 40,
+  },
+
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    zIndex: 35,
+  },
+
+  menuTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 25,
+  },
+
+  menuItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+  },
+
+  menuItemText: {
+    fontSize: 18,
+    color: "red",
+  },
+
   subtitle: { fontSize: 14, color: "#555", marginBottom: 10 },
+
   sectionTitle: { marginTop: 15, fontWeight: "bold", fontSize: 16 },
+
   produtoItem: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -169,7 +251,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#eee",
   },
+
   total: { fontWeight: "bold", fontSize: 18, marginTop: 15 },
+
   btnAdd: {
     backgroundColor: "#4169e1",
     padding: 12,
@@ -177,21 +261,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  btnFechar: {
-    backgroundColor: "red",
-    padding: 15,
-    marginTop: 20,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-btnFecharText: {
-  color: "#fff",
-  fontSize: 18,
-  fontWeight: "bold",
-},
   btnAddText: { color: "#fff", fontWeight: "bold" },
+
   modalContainer: { flex: 1, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+
   produtoBtn: {
     padding: 12,
     borderBottomWidth: 1,
