@@ -36,7 +36,7 @@ const SplashScreen = ({navigation}) => {
         >
             <Text style={[styles.title, {
                 color: colors.text
-            }]}>Bem vindo ao Eu Chefe!</Text>
+            }]}>Bem vindo ao Comanda System!</Text>
             <Text style={styles.text}>Entre com sua conta</Text>
             <View style={styles.button}>
             <TouchableOpacity onPress={()=>navigation.navigate('SignInScreen')}> 

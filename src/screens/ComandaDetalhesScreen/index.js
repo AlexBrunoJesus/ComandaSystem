@@ -133,17 +133,14 @@ export default function ComandaDetalhesScreen({ route, navigation }) {
   if (!comanda) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2ecc71" />
+        <ActivityIndicator size="large" color="#11c211ff" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.subtitle}>
-        Criada em: {new Date(comanda.createdAt).toLocaleString()}
-      </Text>
-
+      
       {/* PRODUTOS */}
       <Text style={styles.sectionTitle}>Produtos</Text>
       <FlatList
@@ -246,7 +243,7 @@ const styles = StyleSheet.create({
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   headerMenuBtn: {
-    backgroundColor: "#2ecc71",
+    backgroundColor: "#11c211ff",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -255,7 +252,7 @@ const styles = StyleSheet.create({
   headerMenuText: { color: "#fff", fontSize: 22 },
 
   subtitle: { fontSize: 14, color: "#555" },
-  sectionTitle: { marginTop: 15, fontWeight: "bold", fontSize: 16 },
+  sectionTitle: { marginTop: 15, fontWeight: "bold", fontSize: 22 },
 
   produtoItem: {
     flexDirection: "row",
@@ -268,29 +265,36 @@ const styles = StyleSheet.create({
   taxaContainer: {
     flexDirection: "row",
     marginTop: 10,
+    alignItems: "center",
+    alignSelf: "center",
   },
   taxaBtn: {
     borderWidth: 1,
-    borderColor: "#2ecc71",
+    borderColor: "#11c211ff",
     padding: 10,
     borderRadius: 8,
     marginRight: 10,
   },
   taxaBtnAtiva: {
-    backgroundColor: "#2ecc71",
+    backgroundColor: "#11c211ff",
   },
-  taxaText: { color: "#2ecc71", fontWeight: "bold" },
+  taxaText: { color: "#11c211ff", fontWeight: "bold" },
   taxaTextAtiva: { color: "#fff" },
 
   resumo: { marginTop: 15 },
   totalFinal: { fontSize: 18, fontWeight: "bold", marginTop: 5 },
 
   btnAdd: {
-    backgroundColor: "#4169e1",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: "#11c211ff",
+    width: 200,
+    height: 45,
+    borderRadius: 25,
     alignItems: "center",
-    marginTop: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginBottom: 60,
+    marginTop: 30,
   },
   btnAddText: { color: "#fff", fontWeight: "bold" },
 
@@ -322,9 +326,9 @@ const styles = StyleSheet.create({
   menuItemText: { fontSize: 18, color: "red" },
 
   modalContainer: { flex: 1, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  modalTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 10 },
   produtoBtn: {
-    padding: 12,
+    padding: 14,
     borderBottomWidth: 1,
     borderColor: "#ddd",
     flexDirection: "row",

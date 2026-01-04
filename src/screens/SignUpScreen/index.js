@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput,
-  Platform, StyleSheet, ScrollView, StatusBar, Alert
+  StyleSheet, ScrollView, StatusBar, Alert
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
@@ -23,14 +23,40 @@ const SignUpScreen = ({ navigation }) => {
     setData({ ...data, secureTextEntry: !data.secureTextEntry });
   };
 
+  // 🔐 Validação de e-mail
+  const isValidEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   const sendCred = async () => {
     if (!name || !email || !password) {
       Alert.alert("Campos obrigatórios", "Preencha nome, e-mail e senha.");
       return;
     }
 
+    if (!isValidEmail(email)) {
+      Alert.alert(
+        "E-mail inválido",
+        "Informe um e-mail válido (exemplo: usuario@email.com)."
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert(
+        "Senha fraca",
+        "A senha deve ter no mínimo 6 caracteres."
+      );
+      return;
+    }
+
     try {
-      const res = await api.post("/auth/register", { name, email, password });
+      const res = await api.post("/auth/register", {
+        name,
+        email: email.toLowerCase(),
+        password
+      });
 
       if (res.data?.token) {
         const token = res.data.token;
@@ -41,18 +67,24 @@ const SignUpScreen = ({ navigation }) => {
         // Atualiza contexto de autenticação
         signIn({ token, email });
 
-        // 🚀 Navega automaticamente para a tela principal
-        // Ajuste o nome da tela conforme seu RootStack, ex: "HomeScreen"
-        navigation.replace('HomeScreen'); 
+        // 🚀 Vai para tela principal
+        navigation.replace('HomeScreen');
       } else {
         Alert.alert("Erro", res.data?.error || "Não foi possível registrar.");
       }
     } catch (error) {
       console.error("Erro no registro:", error);
+
       if (error.response) {
-        Alert.alert("Falha no cadastro", error.response.data?.error || "Verifique os dados e tente novamente.");
+        Alert.alert(
+          "Falha no cadastro",
+          error.response.data?.error || "Verifique os dados e tente novamente."
+        );
       } else {
-        Alert.alert("Erro de conexão", "Não foi possível conectar ao servidor.");
+        Alert.alert(
+          "Erro de conexão",
+          "Não foi possível conectar ao servidor."
+        );
       }
     }
   };
@@ -60,12 +92,14 @@ const SignUpScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#4169e1" barStyle="light-content" />
+
       <View style={styles.header}>
         <Text style={styles.text_header}>Register Now!</Text>
       </View>
 
       <Animatable.View animation="fadeInUpBig" style={styles.footer}>
         <ScrollView>
+
           {/* Nome */}
           <Text style={styles.text_footer}>Name</Text>
           <View style={styles.action}>
@@ -73,7 +107,6 @@ const SignUpScreen = ({ navigation }) => {
             <TextInput
               placeholder="Your name"
               style={styles.textInput}
-              autoCapitalize="none"
               value={name}
               onChangeText={setName}
             />
@@ -86,6 +119,7 @@ const SignUpScreen = ({ navigation }) => {
             <TextInput
               placeholder="Your Email"
               style={styles.textInput}
+              keyboardType="email-address"
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
@@ -100,7 +134,6 @@ const SignUpScreen = ({ navigation }) => {
               placeholder="Your Password"
               secureTextEntry={data.secureTextEntry}
               style={styles.textInput}
-              autoCapitalize="none"
               value={password}
               onChangeText={setPassword}
             />
@@ -123,19 +156,30 @@ const SignUpScreen = ({ navigation }) => {
 
           {/* Botões */}
           <View style={styles.button}>
-            <TouchableOpacity style={styles.signIn} onPress={sendCred}>
-              <LinearGradient colors={['#6A5ACD', '#0000CD']} style={styles.signIn}>
-                <Text style={[styles.textSign, { color: '#fff' }]}>Sign Up</Text>
+            <TouchableOpacity onPress={sendCred}>
+              <LinearGradient
+                colors={['#6A5ACD', '#0000CD']}
+                style={styles.signIn}
+              >
+                <Text style={[styles.textSign, { color: '#fff' }]}>
+                  Sign Up
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              style={[styles.signIn, { borderColor: '#4169e1', borderWidth: 1, marginTop: 15 }]}
+              style={[
+                styles.signIn,
+                { borderColor: '#4169e1', borderWidth: 1, marginTop: 15 }
+              ]}
             >
-              <Text style={[styles.textSign, { color: '#4169e1' }]}>Sign In</Text>
+              <Text style={[styles.textSign, { color: '#4169e1' }]}>
+                Sign In
+              </Text>
             </TouchableOpacity>
           </View>
+
         </ScrollView>
       </Animatable.View>
     </View>

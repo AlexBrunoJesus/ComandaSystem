@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   View, 
   Text, 
@@ -14,47 +14,71 @@ import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import Feather from '@react-native-vector-icons/feather';
 import { useTheme } from 'react-native-paper';
-import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ novo
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from '../../components/context';
-import api from '../../services/api'; // axios configurado
+import api from '../../services/api';
+
+// 📧 Regex simples para validar email
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const SignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { colors } = useTheme();
-  const { signIn } = React.useContext(AuthContext);
+  const { signIn } = useContext(AuthContext);
 
   const sendCred = async () => {
-    if (!email || !password) {
+    const emailTrimmed = email.trim().toLowerCase();
+
+    // 🔴 Campos vazios
+    if (!emailTrimmed || !password) {
       Alert.alert("Campos obrigatórios", "Informe o e-mail e a senha.");
       return;
     }
 
+    // 🔴 Email inválido
+    if (!emailRegex.test(emailTrimmed)) {
+      Alert.alert(
+        "E-mail inválido",
+        "Informe um endereço de e-mail válido (ex: nome@email.com)."
+      );
+      return;
+    }
+
     try {
-      // 🔐 Faz login no backend
-      const res = await api.post('/auth/login', { email, password });
+      const res = await api.post('/auth/login', {
+        email: emailTrimmed,
+        password
+      });
 
       if (res.data?.token) {
         const token = res.data.token;
 
-        // 💾 Salva o token no armazenamento local
+        // 💾 Salva token
         await AsyncStorage.setItem("token", token);
 
-        // Atualiza o contexto de autenticação (se existir)
-        signIn({ token, email });
+        // 🔐 Atualiza contexto
+        signIn({ token, email: emailTrimmed });
 
-        // Navega para a próxima tela (exemplo: tela principal)
-        // navigation.replace('HomeScreen'); // descomente e ajuste se precisar
       } else {
-        Alert.alert("Login falhou", res.data?.error || "Usuário ou senha incorretos.");
+        Alert.alert(
+          "Login falhou",
+          res.data?.error || "Usuário ou senha incorretos."
+        );
       }
     } catch (error) {
       console.error("Erro no login:", error);
+
       if (error.response) {
-        const msg = error.response.data?.error || "Falha na autenticação.";
-        Alert.alert("Erro de Login", msg);
+        Alert.alert(
+          "Erro de Login",
+          error.response.data?.error || "Falha na autenticação."
+        );
       } else {
-        Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
+        Alert.alert(
+          "Erro de Conexão",
+          "Não foi possível conectar ao servidor."
+        );
       }
     }
   };
@@ -62,6 +86,7 @@ const SignInScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#4169e1" barStyle="light-content"/>
+
       <View style={styles.header}>
         <Text style={styles.text_header}>Welcome!</Text>
       </View>
@@ -70,19 +95,22 @@ const SignInScreen = ({ navigation }) => {
         animation="fadeInUpBig"
         style={[styles.footer, { backgroundColor: colors.background }]}
       >
+        {/* EMAIL */}
         <Text style={[styles.text_footer, { color: colors.text }]}>Email</Text>
         <View style={styles.action}>
-          <FontAwesome6 name="user-o" color={colors.text} size={20}/>
+          <FontAwesome6 name="envelope" color={colors.text} size={20}/>
           <TextInput 
             placeholder="Your Email"
-            placeholderTextColor="#666666"
+            placeholderTextColor="#666"
             style={[styles.textInput, { color: colors.text }]}
             autoCapitalize="none"
+            keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
           />
         </View>
 
+        {/* SENHA */}
         <Text style={[styles.text_footer, { color: colors.text, marginTop: 35 }]}>
           Password
         </Text>
@@ -90,7 +118,7 @@ const SignInScreen = ({ navigation }) => {
           <Feather name="lock" color={colors.text} size={20}/>
           <TextInput 
             placeholder="Your Password"
-            placeholderTextColor="#666666"
+            placeholderTextColor="#666"
             secureTextEntry
             style={[styles.textInput, { color: colors.text }]}
             autoCapitalize="none"
@@ -100,9 +128,12 @@ const SignInScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity>
-          <Text style={{ color: '#4169e1', marginTop:15 }}>Forgot password?</Text>
+          <Text style={{ color: '#4169e1', marginTop: 15 }}>
+            Forgot password?
+          </Text>
         </TouchableOpacity>
 
+        {/* BOTÕES */}
         <View style={styles.button}>                
           <TouchableOpacity style={styles.signIn} onPress={sendCred}>
             <LinearGradient colors={['#6A5ACD', '#0000CD']} style={styles.signIn}>
@@ -112,13 +143,14 @@ const SignInScreen = ({ navigation }) => {
 
           <TouchableOpacity
             onPress={() => navigation.navigate('SignUpScreen')}
-            style={[styles.signIn, {
-              borderColor: '#4169e1',
-              borderWidth: 1,
-              marginTop: 15
-            }]}
+            style={[
+              styles.signIn,
+              { borderColor: '#4169e1', borderWidth: 1, marginTop: 15 }
+            ]}
           >
-            <Text style={[styles.textSign, { color: '#4169e1' }]}>Sign Up</Text>
+            <Text style={[styles.textSign, { color: '#4169e1' }]}>
+              Sign Up
+            </Text>
           </TouchableOpacity>
         </View>
       </Animatable.View>
@@ -128,7 +160,7 @@ const SignInScreen = ({ navigation }) => {
 
 export default SignInScreen;
 
-// 💅 Estilos originais (sem mudanças)
+// 🎨 Estilos (inalterados)
 const styles = StyleSheet.create({
   container: {
     flex: 1, 
